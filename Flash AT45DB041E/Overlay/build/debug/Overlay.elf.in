@@ -1,0 +1,1 @@
+build/debug/gpio.o build/debug/main.o build/debug/spi.o build/debug/stm32f4xx_it.o build/debug/stm32f4xx_ll_dma.o build/debug/stm32f4xx_ll_exti.o build/debug/stm32f4xx_ll_gpio.o build/debug/stm32f4xx_ll_rcc.o build/debug/stm32f4xx_ll_spi.o build/debug/stm32f4xx_ll_utils.o build/debug/syscalls.o build/debug/sysmem.o build/debug/system_stm32f4xx.o build/debug/startup_stm32f407xx.o
