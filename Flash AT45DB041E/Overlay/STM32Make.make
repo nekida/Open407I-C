@@ -78,16 +78,25 @@ C_SOURCES =  \
 Core/Src/gpio.c \
 Core/Src/main.c \
 Core/Src/spi.c \
+Core/Src/stm32f4xx_hal_msp.c \
 Core/Src/stm32f4xx_it.c \
 Core/Src/syscalls.c \
 Core/Src/sysmem.c \
 Core/Src/system_stm32f4xx.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_dma.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_exti.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_gpio.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_rcc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_spi.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_utils.c
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
 
 
 CXX_SOURCES = \
@@ -165,36 +174,14 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
--DDATA_CACHE_ENABLE=1 \
--DEXTERNAL_CLOCK_VALUE=12288000 \
--DHSE_STARTUP_TIMEOUT=100 \
--DHSE_VALUE=8000000 \
--DHSI_VALUE=16000000 \
--DINSTRUCTION_CACHE_ENABLE=1 \
--DLSE_STARTUP_TIMEOUT=5000 \
--DLSE_VALUE=32768 \
--DLSI_VALUE=32000 \
--DPREFETCH_ENABLE=1 \
 -DSTM32F407xx \
--DUSE_FULL_LL_DRIVER \
--DVDD_VALUE=3300
+-DUSE_HAL_DRIVER
 
 
 # CXX defines
 CXX_DEFS =  \
--DDATA_CACHE_ENABLE=1 \
--DEXTERNAL_CLOCK_VALUE=12288000 \
--DHSE_STARTUP_TIMEOUT=100 \
--DHSE_VALUE=8000000 \
--DHSI_VALUE=16000000 \
--DINSTRUCTION_CACHE_ENABLE=1 \
--DLSE_STARTUP_TIMEOUT=5000 \
--DLSE_VALUE=32768 \
--DLSI_VALUE=32000 \
--DPREFETCH_ENABLE=1 \
 -DSTM32F407xx \
--DUSE_FULL_LL_DRIVER \
--DVDD_VALUE=3300
+-DUSE_HAL_DRIVER
 
 
 # AS includes
@@ -205,7 +192,8 @@ C_INCLUDES =  \
 -ICore/Inc \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/STM32F4xx_HAL_Driver/Inc
+-IDrivers/STM32F4xx_HAL_Driver/Inc \
+-IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy
 
 
 
