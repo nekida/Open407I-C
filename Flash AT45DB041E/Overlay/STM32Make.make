@@ -75,6 +75,7 @@ endif
 ######################################
 # C sources
 C_SOURCES =  \
+AT45DBxx/AT45DBxx.c \
 Core/Src/gpio.c \
 Core/Src/main.c \
 Core/Src/spi.c \
@@ -189,6 +190,7 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
+-IAT45DBxx \
 -ICore/Inc \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \

@@ -53,12 +53,28 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+typedef enum {
+  ERR_RD_ID = 0,
+  ERR_GT_ADDR,
+  ERR_WR,
+  ERR_RD
+} error_t;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void error_handler (error_t err)
+{
+  const error_t error = err;
+  UNUSED (error);
+  HAL_GPIO_WritePin (USERLED1_GPIO_Port, USERLED1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin (USERLED2_GPIO_Port, USERLED2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin (USERLED3_GPIO_Port, USERLED3_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin (USERLED4_GPIO_Port, USERLED4_Pin, GPIO_PIN_RESET);
+  while (1) {
 
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -98,11 +114,54 @@ int main(void)
   uint8_t at45dbxx_id[id_num];
   memset (at45dbxx_id, 0, id_num);
   
-  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-  HAL_SPI_Transmit (&hspi1, &at45dbxx_cmd_get_id, sizeof (at45dbxx_cmd_get_id), HAL_MAX_DELAY);
-  HAL_SPI_Receive (&hspi1, at45dbxx_id, sizeof (at45dbxx_id), HAL_MAX_DELAY);
-  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
+  HAL_StatusTypeDef status = HAL_OK;
 
+  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
+  status = HAL_SPI_Transmit (&hspi1, &at45dbxx_opcode_get_id, sizeof (at45dbxx_opcode_get_id), HAL_MAX_DELAY);
+  status = HAL_SPI_Receive (&hspi1, at45dbxx_id, sizeof (at45dbxx_id), HAL_MAX_DELAY);
+  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
+  if (status != HAL_OK)
+    error_handler (ERR_RD_ID);
+
+  // Write
+  const uint16_t page_addr = 0x123;
+  const size_t page_addr_len = 3;
+  uint8_t page_addr_arr[page_addr_len];
+  memset (page_addr_arr, 0, page_addr_len);
+
+  const char * test_message[] = "Test message";
+
+  const size_t cmd = 1;
+  const size_t end_of_str = 1;
+  const size_t len_message = strlen (test_message) + end_of_str + cmd;
+  uint8_t tx_data[len_message];
+
+  tx_data[0] = at45dbxx_opcode_wr_page_on_buf1;
+  memcpy (&tx_data[1], test_message, len_message - cmd);
+
+  if (!at45dbxx_get_addr_packed (page_addr, page_addr_arr, page_addr_len))
+    error_handler (ERR_GT_ADDR);
+
+  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
+  // status = HAL_SPI_Transmit (&hspi1, &at45dbxx_opcode_wr_page_on_buf1, sizeof (at45dbxx_opcode_wr_page_on_buf1), HAL_MAX_DELAY);
+  status = HAL_SPI_Transmit (&hspi1, page_addr_arr, page_addr_len, HAL_MAX_DELAY);
+  status = HAL_SPI_Transmit (&hspi1, (uint8_t *)tx_data, len_message, HAL_MAX_DELAY);
+  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
+  if (status != HAL_OK)
+    error_handler (ERR_WR);
+
+  HAL_Delay (500);
+
+  // Read
+  uint8_t rx_test_message[len_message];
+  rx_test_message[0] = at45dbxx_opcode_cont_arr_rd_hf;
+  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
+  // status = HAL_SPI_Transmit (&hspi1, &at45dbxx_opcode_cont_arr_rd_hf, sizeof (at45dbxx_opcode_cont_arr_rd_hf), HAL_MAX_DELAY);
+  status = HAL_SPI_Transmit (&hspi1, page_addr_arr, page_addr_len, HAL_MAX_DELAY);
+  status = HAL_SPI_Receive (&hspi1, (uint8_t *)rx_test_message, len_message, HAL_MAX_DELAY);
+  HAL_GPIO_WritePin (SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
+  if (status != HAL_OK)
+    error_handler (ERR_RD);
   /* USER CODE END 2 */
 
   /* Infinite loop */
