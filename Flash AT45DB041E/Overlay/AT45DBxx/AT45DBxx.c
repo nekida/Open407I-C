@@ -23,11 +23,18 @@ static bool at45dbxx_get_addr_packed (uint32_t addr_in, uint8_t *addr_out, size_
     if (addr_out == NULL || addr_out_size > addr_size || addr_in & mask_overflow)
         return false;
 
-    const uint8_t one_byte_offset = 8;
-    const uint8_t two_byte_offset = 16;
-    addr_out[0] = (addr_in >> 6) & 0x3F;
-    addr_out[1] = (addr_in << 2) & 0xFC;
-    addr_out[2] = 0x0;
+    // | X X P P P P P P | P P P P P P B B | B B B B B B B B |
+    // P = Page Address Bit B = Byte/Buffer
+    union {
+        uint16_t addr_16;
+        uint8_t addr_8[2];
+    } addr;
+
+    const uint8_t two_bits_offset = 2;
+    addr.addr_16 = (addr_in << two_bits_offset) & 0x3FFC;
+    memcpy (addr_out, &addr.addr_8[0], sizeof (addr));
+    const uint8_t byte = 0;
+    addr_out[2] = byte;
 
     return true;
 }

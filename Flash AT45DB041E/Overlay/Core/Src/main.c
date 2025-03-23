@@ -123,29 +123,21 @@ int main(void)
   HAL_Delay (500);
 
   uint8_t tx_test_message[] = "Test message";
-  const size_t len_message = strlen ((char *)tx_test_message) + sizeof (uint8_t);
+  const size_t len_message = sizeof (tx_test_message);
   uint8_t rx_test_message[len_message];
   memset (rx_test_message, 0, len_message);
 
+  at45dbxx_config_t at45dbxx_config_wr = { .opcode = AT45DBXX_OPCODE_WR_PAGE_ON_BUF1, .addr = 0x123, .msg = tx_test_message, .msg_len = len_message };
+  at45dbxx_config_t at45dbxx_config_rd = { .opcode = AT45DBXX_OPCODE_CONT_ARR_RD_HF, .addr = 0x123, .msg = rx_test_message, .msg_len = len_message };
+
   // Write
-  at45dbxx_config_t at45dbxx_config = {
-    .opcode = AT45DBXX_OPCODE_WR_PAGE_ON_BUF1,
-    .addr = 0x123,
-    .msg = tx_test_message,
-    .msg_len = len_message
-  };
-  if (!at45dbxx_wr_data (&at45dbxx_config))
+  if (!at45dbxx_wr_data (&at45dbxx_config_wr))
     error_handler (ERR_WR);
 
   HAL_Delay (500);
-  memset (&at45dbxx_config, 0, sizeof (at45dbxx_config_t));
 
   // Read
-  at45dbxx_config.opcode = AT45DBXX_OPCODE_CONT_ARR_RD_HF;
-  at45dbxx_config.addr = 0x123;
-  at45dbxx_config.msg = rx_test_message;
-  at45dbxx_config.msg_len = len_message;
-  if (!at45dbxx_rd_data (&at45dbxx_config))
+  if (!at45dbxx_rd_data (&at45dbxx_config_rd))
     error_handler (ERR_RD);
 
   HAL_Delay (500);
