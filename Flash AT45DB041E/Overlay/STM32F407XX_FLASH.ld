@@ -61,9 +61,13 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 126K
 CCMRAM (xrw)      : ORIGIN = 0x10000000, LENGTH = 64K
 FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 1024K
+/* Overlay area in RAM */
+OVL (xrw) : ORIGIN = 0x2001F800, LENGTH = 2K
+/* Give external flash its own storage */
+XFLASH (r) : ORIGIN = 0x00000000, LENGTH = 528K
 }
 
 /* Define output sections */
@@ -212,7 +216,17 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
-
+  OVERLAY : NOCROSSREFS {
+	    .fee {
+            .overlay1_start = .;
+		        *(.ov_fee)
+            *(.ov_fee_static)
+      }
+	    .fie { *(.ov_fie) }
+	    .foo { *(.ov_foo) }
+	    .fum { *(.ov_fum) }
+	} >OVL AT> XFLASH
+  PROVIDE (overlay1 = .overlay1_start);
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

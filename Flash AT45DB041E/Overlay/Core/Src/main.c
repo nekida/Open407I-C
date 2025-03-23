@@ -59,6 +59,81 @@ typedef enum {
   ERR_WR,
   ERR_RD
 } error_t;
+
+#define N_REGIONS	1	// # of overlay regions in RAM
+#define N_OVLY		4	// Total # of overlays (in all regions)
+
+#define OVERLAY(region,ov,sym)	{ region, &ov, &__load_start_ ## sym, &__load_stop_ ## sym, 0, sym }
+#define LOADREF(sym) __load_start_ ## sym, __load_stop_ ## sym 
+
+extern unsigned long overlay1;	// Provides address of overlay region 1
+
+// Function load addresses
+extern char LOADREF(fee), LOADREF(fie), LOADREF(foo), LOADREF(fum);
+
+/*********************************************************************
+ * Overlayed functions
+ *********************************************************************/
+ int fee(int arg) __attribute__((noinline,section(".ov_fee")));
+ int fie(int arg) __attribute__((noinline,section(".ov_fie")));
+ int foo(int arg) __attribute__((noinline,section(".ov_foo")));
+ int fum(int arg) __attribute__((noinline,section(".ov_fum")));
+ 
+/*********************************************************************
+ * Overlay Table and macros
+ *********************************************************************/
+
+ typedef struct {
+	short		regionx;// Overlay region index
+	void		*vma;	// Overlay's mapped address
+	char		*start;	// Load start address
+	char		*stop;	// Load stop address
+	unsigned long	size;	// Size in bytes
+	void		*func;	// Function pointer
+} s_overlay;
+
+// Overlay table:
+static s_overlay overlays[N_OVLY] = {
+	OVERLAY(0, overlay1, fee),
+	OVERLAY(0, overlay1, fie),
+	OVERLAY(0, overlay1, foo),
+	OVERLAY(0, overlay1, fum)
+};
+
+// Overlay cache:
+static s_overlay *cur_overlay[N_REGIONS] = { 0 };
+
+/*********************************************************************
+ * Overlay lookup: Returns func ptr, after copying code if necessary
+ *********************************************************************/
+
+static void *module_lookup (void *module) {
+	unsigned regionx;
+	s_overlay *ovl = 0;
+
+	// std_printf("module_lookup(%p):\n",module);
+
+	for ( unsigned ux=0; ux<N_OVLY; ++ux ) {
+		if ( overlays[ux].start == module ) {
+			regionx = overlays[ux].regionx;
+			ovl = &overlays[ux];
+			break;
+		}
+	}
+
+	if ( !ovl )
+		return 0;		// Not found
+
+	if ( !cur_overlay[regionx] || cur_overlay[regionx] != ovl ) {
+		if ( ovl->size == 0 )
+			ovl->size = (char *)ovl->stop - (char *)ovl->start;
+		cur_overlay[regionx] = ovl;
+		memcpy(ovl->vma,ovl->start,ovl->size);
+	}
+	return ovl->func;
+}
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -208,7 +283,79 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+/*********************************************************************
+ * Overlay function fee()
+ *********************************************************************/
 
+ int fee (int arg) {
+   static const char format[] 
+     __attribute__((section(".ov_fee_static")))
+     = "***********\n"
+       "fee(0x%04X)\n"
+       "***********\n";
+ 
+   // std_printf(format,arg);
+   return arg + 0x0001;
+ }
+ 
+ /*********************************************************************
+  * Overlay function fie()
+  *********************************************************************/
+ 
+ int fie (int arg) {
+   // std_printf("fie(0x%04X)\n",arg);
+   return arg + 0x0010;
+ }
+ 
+ /*********************************************************************
+  * Overlay function foo()
+  *********************************************************************/
+ 
+ int foo (int arg) {
+   // std_printf("foo(0x%04X)\n",arg);
+   return arg + 0x0200;
+ }
+ 
+ /*********************************************************************
+  * Overlay function fum()
+  *********************************************************************/
+ 
+ int fum (int arg) {
+   // std_printf("fum(0x%04X)\n",arg);
+   return arg + 0x3000;
+ }
+
+ /*********************************************************************
+ * Stub functions for calling the overlay functions:
+ *********************************************************************/
+
+static int
+fee_stub(int arg) {
+	int (*feep)(int arg) = module_lookup(&__load_start_fee);
+
+	return feep(arg);
+}
+
+static int
+fie_stub(int arg) {
+	int (*fiep)(int arg) = module_lookup(&__load_start_fie);
+
+	return fiep(arg);
+}
+
+static int
+foo_stub(int arg) {
+	int (*foop)(int arg) = module_lookup(&__load_start_foo);
+
+	return foop(arg);
+}
+
+static int
+fum_stub(int arg) {
+	int (*fump)(int arg) = module_lookup(&__load_start_fum);
+
+	return fump(arg);
+}
 /* USER CODE END 4 */
 
 /**
